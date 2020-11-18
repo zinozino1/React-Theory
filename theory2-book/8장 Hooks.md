@@ -12,7 +12,13 @@
 2-2) 특정 값이 업데이트될 때만 실행하고 싶을 때
 -> useEffect(()=>{...},[value])
 
+
+
+
 3. useReducer -> react-redux 대신에 사용하는 react 내장 hook
+
+
+
 
 -> 우리가 이전에 만든 사용자 리스트 기능에서의 주요 상태 업데이트 로직은 App 컴포넌트 내부에서 이루어졌었습니다. 상태를 업데이트 할 때에는 useState 를 사용해서 새로운 상태를 설정해주었는데요, 상태를 관리하게 될 때 useState 를 사용하는것 말고도 다른 방법이 있습니다. 바로, useReducer 를 사용하는건데요, 이 Hook 함수를 사용하면 컴포넌트의 상태 업데이트 로직을 컴포넌트에서 분리시킬 수 있습니다. 상태 업데이트 로직을 컴포넌트 바깥에 작성 할 수도 있고, 심지어 다른 파일에 작성 후 불러와서 사용 할 수도 있지요.
 
@@ -159,6 +165,9 @@ const App = () => {
 export default App;
 
 
+
+
+
 4. useMemo, useCallback
 
 
@@ -283,6 +292,9 @@ export default App;
 
 5. useRef
 
+
+
+
 * JavaScript 를 사용 할 때에는, 우리가 특정 DOM 을 선택해야 하는 상황에 getElementById, querySelector 같은 DOM Selector 함수를 사용해서 DOM 을 선택합니다.
 
 리액트를 사용하는 프로젝트에서도 가끔씩 DOM 을 직접 선택해야 하는 상황이 발생 할 때도 있습니다. 예를 들어서 특정 엘리먼트의 크기를 가져와야 한다던지, 스크롤바 위치를 가져오거나 설정해야된다던지, 또는 포커스를 설정해줘야된다던지 등 정말 다양한 상황이 있겠죠. 추가적으로 Video.js, JWPlayer 같은 HTML5 Video 관련 라이브러리, 또는 D3, chart.js 같은 그래프 관련 라이브러리 등의 외부 라이브러리를 사용해야 할 때에도 특정 DOM 에다 적용하기 때문에 DOM 을 선택해야 하는 상황이 발생 할 수 있습니다.
@@ -337,4 +349,211 @@ const App = () => {
 export default App;
 
 ex2) ref를 컴포넌트 로컬변수로도 이용 가능
+
+
+
+
+
+6. custom hooks
+
+* 컴포넌트를 만들다보면, 반복되는 로직이 자주 발생합니다. 예를 들어서 input 을 관리하는 코드는 관리 할 때마다 꽤나 비슷한 코드가 반복되죠.
+
+이번에는 그러한 상황에 커스텀 Hooks 를 만들어서 반복되는 로직을 쉽게 재사용하는 방법을 알아보겠습니다.
+
+src 디렉터리에 hooks 라는 디렉터리를 만들고, 그 안에 useInputs.js 라는 파일을 만드세요.
+
+커스텀 Hooks 를 만들 때에는 보통 이렇게 use 라는 키워드로 시작하는 파일을 만들고 그 안에 함수를 작성합니다.
+
+커스텀 Hooks 를 만드는 방법은 굉장히 간단합니다. 그냥, 그 안에서 useState, useEffect, useReducer, useCallback 등 내장 Hooks 를 사용하여 원하는 기능을 구현해주고, 컴포넌트에서 사용하고 싶은 값들을 반환해주면 됩니다.
+
+
+ex) useInput -> 유저 input 값 관리하기
+
+1) hooks/useInput.js
+import React, { useReducer } from "react";
+
+const reducer = (state, action) => {
+    return {
+        ...state,
+        [action.name]: action.value,
+    };
+};
+
+export const useInput = (initialForm) => {
+    const [state, dispatch] = useReducer(reducer, initialForm);
+
+    const onChange = (e) => {
+        dispatch(e.target);
+    };
+    return [state, onChange];
+};
+
+export default useInput;
+
+2) App.jsx
+
+const App = () => {
+    const [input, setInput] = useInput({ name: "", nickname: "" });
+    // input 상태관리 with custom hook
+    return (
+        <div>
+            <input
+                type="text"
+                placeholder="이름"
+                name="name"
+                onChange={setState}
+            />
+            <input
+                type="text"
+                placeholder="닉네임"
+                name="nickname"
+                onChange={setState}
+            />
+            <p>{state.name}</p>
+            <p>{state.nickname}</p>
+        </div>
+    );
+};
+
+export default App;
+
+
+ex2)
+
+1)
+import { useState, useCallback } from 'react';
+
+function useInputs(initialForm) {
+  const [form, setForm] = useState(initialForm);
+  // change
+  const onChange = useCallback(e => {
+    const { name, value } = e.target;
+    setForm(form => ({ ...form, [name]: value }));
+  }, []);
+  const reset = useCallback(() => setForm(initialForm), [initialForm]);
+  return [form, onChange, reset];
+}
+
+export default useInputs;
+
+
+2)
+import React, { useRef, useReducer, useMemo, useCallback } from 'react';
+import UserList from './UserList';
+import CreateUser from './CreateUser';
+import useInputs from './hooks/useInputs';
+
+function countActiveUsers(users) { --> util에 넣으면 좋음
+  console.log('활성 사용자 수를 세는중...');
+  return users.filter(user => user.active).length;
+}
+
+const initialState = {
+  users: [
+    {
+      id: 1,
+      username: 'velopert',
+      email: 'public.velopert@gmail.com',
+      active: true
+    },
+    {
+      id: 2,
+      username: 'tester',
+      email: 'tester@example.com',
+      active: false
+    },
+    {
+      id: 3,
+      username: 'liz',
+      email: 'liz@example.com',
+      active: false
+    }
+  ]
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'CREATE_USER':
+      return {
+        users: state.users.concat(action.user)
+      };
+    case 'TOGGLE_USER':
+      return {
+        users: state.users.map(user =>
+          user.id === action.id ? { ...user, active: !user.active } : user
+        )
+      };
+    case 'REMOVE_USER':
+      return {
+        users: state.users.filter(user => user.id !== action.id)
+      };
+    default:
+      return state;
+  }
+}
+
+function App() {
+  const [{ username, email }, onChange, reset] = useInputs({
+    username: '', --> 인풋 상태 관리용
+    email: ''
+  });
+  const [state, dispatch] = useReducer(reducer, initialState); --> 유저 상태 관리용
+  const nextId = useRef(4); --> 로컬변수로 이용.
+
+  const { users } = state;
+
+  const onCreate = useCallback(() => {
+    dispatch({
+      type: 'CREATE_USER',
+      user: {
+        id: nextId.current,
+        username,
+        email
+      }
+    });
+    reset();
+    nextId.current += 1;
+  }, [username, email, reset]);
+
+  const onToggle = useCallback(id => {
+    dispatch({
+      type: 'TOGGLE_USER',
+      id
+    });
+  }, []);
+
+  const onRemove = useCallback(id => {
+    dispatch({
+      type: 'REMOVE_USER',
+      id
+    });
+  }, []);
+
+  const count = useMemo(() => countActiveUsers(users), [users]);
+  return (
+    <>
+      <CreateUser
+        username={username}
+        email={email}
+        onChange={onChange}
+        onCreate={onCreate}
+      />
+      <UserList users={users} onToggle={onToggle} onRemove={onRemove} />
+      <div>활성사용자 수 : {count}</div>
+    </>
+  );
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
 ```
