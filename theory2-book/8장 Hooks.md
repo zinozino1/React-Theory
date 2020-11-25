@@ -401,13 +401,13 @@ const App = () => {
                 type="text"
                 placeholder="이름"
                 name="name"
-                onChange={setState}
+                onChange={setInput}
             />
             <input
                 type="text"
                 placeholder="닉네임"
                 name="nickname"
-                onChange={setState}
+                onChange={setInput}
             />
             <p>{state.name}</p>
             <p>{state.nickname}</p>
@@ -423,7 +423,7 @@ ex2)
 1)
 import { useState, useCallback } from 'react';
 
-function useInputs(initialForm) {
+function useInputs(initialForm) { --> initial form은 고정되어 있음. 변하지 않는다. form 이 바뀌는 것임
   const [form, setForm] = useState(initialForm);
   // change
   const onChange = useCallback(e => {

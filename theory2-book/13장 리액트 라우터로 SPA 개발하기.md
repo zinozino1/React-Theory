@@ -164,7 +164,7 @@ http://localhost:3000/about?detail=true
 주소로 들어갔을 때의 location 객체 값
 => {
     "pathname" : "/about",
-    "search" : "?detail=true",
+    "search" : "?detail=true", --> 실질적인 쿼리스트링. location.search
     "hash": ""
 }
 
@@ -226,11 +226,12 @@ const Profiles = () => {
                 </li>
             </ul>
             <Route
-                path="/profiles"
+                path="/profiles" --> 그냥 profiles일 때
                 exact
                 render={() => <div>사용자를 선택해주세요</div>}
             ></Route>
             <Route path="/profiles/:username" component={Profile}></Route>
+            --> /profiles/:username일 때
         </div>
     );
 };
@@ -282,7 +283,7 @@ const RouterExam = () => {
 
 * history
 
-- hisrory 객체는 라우트로 사용된 컴포넌트에 match, location과 함께 전달되는 props 중 하나로, 이 객체를 통해 컴포넌트 내에 구현하는 메서드에서 라우터 API를 호출할 수 있다. 예를 들어 특정 버튼을 눌렀을 때 뒤로 거가너, 로그인 후 화면을 전환하거나 다른 페이지로 이탈하는 것을 방지해야할 때 history를 활용한다.
+- hisrory 객체는 라우트로 사용된 컴포넌트에 match, location과 함께 전달되는 props 중 하나로, 이 객체를 통해 컴포넌트 내에 구현하는 메서드에서 라우터 API를 호출할 수 있다. 예를 들어 특정 버튼을 눌렀을 때 뒤로 가거나, 로그인 후 화면을 전환하거나 다른 페이지로 이탈하는 것을 방지해야할 때 history를 활용한다.
 
 ex)
 
@@ -305,6 +306,8 @@ const historySample = ({ history }) => {
         </div>
     );
 };
+
+- history.block, unblock도 있는데, useEffect와 함께 써야하는 듯함.
 
 
 
@@ -376,7 +379,11 @@ import { Route, Link, withRouter, Switch } from "react-router-dom";
 * NavLink
 
 - NavLink는 Link와 비슷하다 현재 경로와 Link에서 사용하는 경로가 일치하는 경우 특정 스타일 혹은 CSS 클래스를 적용할 수 있는 컴포넌트이다.
-- 아직 쓸모있는지 모르겠음
+- Link와 사용방법은 거의 비슷
+- styled(NavLink)`` -> 이런식으로 사용 가능
+- <NavLink to="/"> .... 이런식으로
+
+
 
 
 ```
