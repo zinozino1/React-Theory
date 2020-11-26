@@ -18,6 +18,141 @@
 - constants(액션 타입 정의)
 - reducers(리듀서 정의)
 
+-> 코드르 종류에 다라 다른 파일에 작성하여 정리할 수 잇어서 편리하지만 새로운 액션을 만들 때마다 세 종류의 파일을 모두 수정해야 하기 때문에 불편함. 하지만 리덕스 공식 문서에서 이 구조를 택하고 있음.
+
+2) Ducks 패턴
+
+- modules(액션 타입, 액션 생성 함수, 리듀서 함수를 기능별로 파일 하나에 몰아서 다 작성하는 방식)
+- 이번 프로젝트에서는 Ducks패턴을 사용하여 코드 작성.
+- Ducks 패턴을 사용하여 액션 타입, 액션 생성 함수, 리듀서를 작성한 코드를 모듈이라고 한다.
+
+
+
+* 모듈 작성하기
+
+1) 액션 타입 정의하기
+
+const INCREASE = "counter/INCREASE";
+const DECREASE = "counter/DECREASE";
+-> 문자열 안의 내용은 모듈이름/액션이름과 같은 형태로 작성해야 나중에 프로젝트가 커졌을 때 액션의 이름이 충돌되지 않게 해준다.
+
+2) 액션 생성 함수 만들기
+
+export const increase = () => {
+    return {
+        type: INCREASE,
+    };
+};
+export const decrease = () => {
+    return {
+        type: DECREASE,
+    };
+};
+
+-> export 꼭 써줘야 함
+
+3) 초기 상태 및 리듀서 함수 만들기
+
+- 액션 생성함수는 export, 리듀서는 export default로 내보내준다.
+
+// 초기 상태 정의
+
+const initialState = {
+    number: 0,
+};
+
+// 리듀서 함수 정의
+
+const counter = (state = initialState, action) => {
+    switch (action.type) {
+        case INCREASE:
+            return {
+                number: state.number + 1,
+            };
+        case DECREASE:
+            return {
+                number: state.number - 1,
+            };
+        default:
+            return state;
+    }
+};
+
+4) 루트 리듀서 만들기
+
+- 나중에 createStore 함수를 사용하여 스토어를 만들 대는 리듀서를 하나만 사용해야한다.
+- 그렇기 때문에 기존에 만들었던 리듀서를 하나로 합쳐주어야 하는데, 이 작업은 redux에서 제공하는 combineReducers라는 유틸 함수를 사용하여 쉽게 처리할 수 있다.
+- modules 디렉토리에 index.js 라는 파일로 만들기.
+
+import { combineReducers } from "redux";
+import counter from "./counter";
+import todos from "./todos";
+
+const rootReducer = combineReducers({
+    counter,
+    todos,
+});
+
+export default rootReducer;
+
+-> 파일 이름을 index.js 로 설정해주면 나중에 불러올 때 디렉터리 이름까지만 입력하여 불러올 수 있다.
+- import rootReducer from "./modules"
+
+
+
+
+*** 리액트 애플리케이션에 리덕스 적용하기
+
+- 스토어를 만들고 리액트 애플리케이션에 리덕스를 적용하는 작업은 src 디렉터리의 index.js에서 이루어진다.
+
+1) 스토어 만들기
+
+import { createStore } from "redux";
+import rootReducer from "./modules";
+
+const store = createStore(rootReducer);
+
+2) Provider 컴포넌트를 사용하여 프로젝트에 리덕스 적용하기
+
+- 리액트 컴포넌트에서 스토어를 사용할 수 있도록 App 컴포넌트를 react-redux에서 제공하는 Provider 컴포넌트로 감싸준다. 이 컴포넌트를 사용할 때는 store를 props로 전달해줘야 함.
+
+3) redux devtools의 설치 및 적용
+
+- redux 개발자 도구이며 크롬 확장 프로그램으로 설치하여 사용할 수 있음
+
+import { composeWithDevTools } from "redux-devtools-extension";
+
+const store = createStore(rootReducer, composeWithDevTools());
+
+4) 컨테이너 컴포넌트 만들기
+
+- 리덕스 스토어와 연동된 컴포넌트를 컨테이너 컴포넌트라고 함
+- src/containers 에 컨테이너 컴포넌트 생성
+- 이 컴포넌트를 리덕스와 연동하려면 react-redux에서 제공하는 connect 함수를 사용해야 함
+- connect(mapStateToProps, mapDispatchToProps);
+- mapStateToProps는 리덕스 스토어 안의 상태를 컨테이너 컴포넌트의 props로 넘겨주기 위해 설정하는 함수
+- mapDispatchToProps는 리덕스 스토어 안의 액션 생성함수를 컨테이너 컴포넌트의 props로 넘겨주기 위해 설정하는 함수
+
+- connect함수를 호출하고 나면 또 다른 함수를 반환한다. 반환된 함수에 컴포넌트를 파라미터로 넣어주면 리덕스와 연동된 컴포넌트가 만들어진다.
+
+-> const makeContainer = connect(mapStateToProps, mapDispatchToProps);
+makeContainer(타겟 컴포넌트);
+
+
+
+
+***** 리덕스 도입할 때 중요한 3가지 작업
+
+1 - store 생성 및 모듈 정의
+2 - container 컴포넌트 작성 & store와 connect
+3 - presentational component에서 logic 작성
+
+
+* 리덕스를 더 편하게 사용하기
+
+
+
+
 
 
 
