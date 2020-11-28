@@ -222,8 +222,11 @@ onChange = {onInputChange} --> action 파라미터가 필요 없을 때
 
 위 두개 코드는 다른 것임 -> 파라미터를 넣고 싶으면 위에 거 써야함. 근데 액션에 payload 값을 넣는 경우가 대부분이므로 위에 것이 훨씬 많음.
 
+****** redux-actions의 모듈 handleAction이 아니고 handleActions임.!!!!!!!!
+
 
 3. 컨테이너의 connect는 컴포넌트에서 이벤트가 발생했을 시 액션생성 + dispatch까지 함께 해주는 역할을 한다.
+
 
 
 
