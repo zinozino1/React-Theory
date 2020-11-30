@@ -229,5 +229,22 @@ onChange = {onInputChange} --> action 파라미터가 필요 없을 때
 
 
 
+***** redux-hook 사용하기
+
+- 리덕스 스토어와 연동된 컨테이너 컴포넌트를 만들 때 connect함수를 사용하는 대신 react-redux에서 제공하는 hooks를 사용할 수도 있다.
+
+* useSelector로 상태 조회하기
+- const 결과 = useSelector(상태선택함수);
+
+=> mapStateToProps와 형태가 똑같다.
+
+* useDispatch로 액션생성함수 조회하기
+
+
+
+***** connect함수를 사용하여 컨테이너 컴포넌트를 만들었을 경우 해당 컨테이너 컴포넌트의 부모 컴포넌트가 리렌더링될 때 해당 컨테이너 컴포넌트의 props가 바뀌지 않았다면 리렌더링이 자동으로 방지되어 성능이 최적화된다.
+
+반면 useSelector를 사용하여 리덕스 상태를 조회했을 때는 이 최적화 작업이 자동으로 이루어지지 않으므로 성능 최적화를 위해서는 React.memo를 컨테이너 컴포넌트에 사용해주어야 한다.
+
 
 ```

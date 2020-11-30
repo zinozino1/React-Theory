@@ -17,6 +17,7 @@
 
 리덕스 미들웨어의 동작 방식을 잠시 생각해보자면, 디스패치된 액션이 스토어로 전달되기 전에 미들웨어에서 원하는 작업을 처리한 후 스토어로 액션을 전달한다고 공부했습니다.
 
+*** 외부 API 와 연동하는 작업은 굳이 redux 미들웨어를 사용하지 않아도 좋으나(컴포넌트 내부 state, hook으로 대체 가능) 좋은 개발자 경험이 따라온다.
 
 
 
@@ -125,9 +126,121 @@ export default connect(
 
 
 
-3. 웹 요청 비동기 작업 처리하기
+***** redux-saga
 
-- JSONPlaceholder API 이용
+- redux-thunk의 경우엔 함수를 디스패치 할 수 있게 해주는 미들웨어였지요? redux-saga의 경우엔, 액션을 모니터링하고 있다가, 특정 액션이 발생하면 이에 따라 특정 작업을 하는 방식으로 사용합니다. 여기서 특정 작업이란, 특장 자바스크립트를 실행하는 것 일수도 있고, 다른 액션을 디스패치 하는 것 일수도 있고, 현재 상태를 불러오는 것 일수도 있습니다.
+
+redux-saga는 redux-thunk로 못하는 다양한 작업들을 처리 할 수 있습니다. 예를 들자면..
+
+- 비동기 작업을 할 때 기존 요청을 취소 처리 할 수 있습니다
+- 특정 액션이 발생했을 때 이에 따라 다른 액션이 디스패치되게끔 하거나, 자바스크립트 코드를 실행 할 수 있습니다.
+- 웹소켓을 사용하는 경우 Channel 이라는 기능을 사용하여 더욱 효율적으로 코드를 관리 할 수 있습니다 (참고)
+- API 요청이 실패했을 때 재요청하는 작업을 할 수 있습니다.
+이 외에도 다양한 까다로운 비동기 작업들을 redux-saga를 사용하여 처리 할 수 있답니다.
+
+redux-saga는 다양한 상황에 쓸 수 있는 만큼, 제공되는 기능도 많고, 사용방법도 진입장벽이 꽤나 큽니다. 자바스크립트 초심자라면 생소할만한 Generator 문법을 사용하는데요, 이 문법을 이해하지 못하면 redux-saga를 배우는 것이 매우 어려우니, 이 문법부터 작동방식을 이해해보도록 하겠습니다.
+
+
+
+** generator
+
+- 제너레이터 함수를 호출하면 제너레이터 반환
+- 제너레이터는 이터러블이자 이터레이터. next()함수 호출가능
+
+주의점
+1) yield 보다 next가 1개 더 많음
+2) next에 인자 전달할 때는 그 전의 yield 에 값을 넣는 것
+3) next 호출시 yield 뒤에 있는 것이 value로 들어감
+
+ex)
+function* generator(){
+    let a = yield;
+    let b = yield;
+    yield a + b;
+}
+
+const gene = generator();
+gene.next(); -> {value : undefined, done: false}
+gene.next(1); -> {value : undefined, done: false}
+gene.next(2); -> {value : 3, done: false}
+gene.next(); -> {value : undefined, done: true}
+
+
+ex2) -> redux-saga는 이 코드와 비슷한 원리로 작동된다.
+function* watchGenerator() {
+    console.log("모니터링중..");
+    let prevAction = null;
+    while (true) {
+        const action = yield;
+        console.log("이전액션", prevAction);
+        prevAction = action;
+        if (action.type === "HELLO") {
+            console.log("하이여");
+        }
+    }
+}
+
+const watch = watchGenerator();
+watch.next();
+watch.next({type:"TEST"});
+watch.next({type:"HELLO"});
+
+위 예제를
+
+function* watchGenerator() {
+    console.log("모니터링중..");
+    let prevAction = null;
+
+        const action = yield;
+        console.log("이전액션", prevAction);
+        prevAction = action;
+        if (action.type === "HELLO") {
+            console.log("하이여");
+        }
+        const action = yield;
+        console.log("이전액션", prevAction);
+        prevAction = action;
+        if (action.type === "HELLO") {
+            console.log("하이여");
+        }
+        const action = yield;
+        console.log("이전액션", prevAction);
+        prevAction = action;
+        if (action.type === "HELLO") {
+            console.log("하이여");
+        }
+
+}
+
+const watch = watchGenerator();
+watch.next();
+watch.next({type:"TEST"});
+watch.next({type:"HELLO"});
+
+이렇게 이해하면 편하다
+
+-> 이 코드가 위의 역할을 수행한다(모니터링)
+export function* counterSaga() {
+    yield takeEvery(INCREASE_ASYNC, increaseSaga);
+    // 들어오는 모든 액션에 대해 특정 작업을 처리해줌
+    yield takeLatest(DECREASE_ASYNC, decreaseSaga);
+    // 기존에 진행중이던 작업이 있다면 그것을 취소 처리하고 가장 마지막으로 실행된 작업만 수행
+}
+
+
+redux-thunk에서는 thunk 함수를 만들어서 해당 함수에서 비동기 작업을 하고 필요한 시점에 특정 액션을 디스패치합니다. redux-saga는 비동기 작업을 처리 할 때 다른 방식으로 처리합니다.
+
+redux-saga에서는 특정 액션을 모니터링하도록 하고, 해당 액션이 주어지면 이에 따라 제너레이터 함수를 실행하여 비동기 작업을 처리 후 액션을 디스패치합니다.
+
+
+
+
+**** saga 사용법
+1) saga 제너레이터 함수 만들기
+2) 모니터링 함수 만들기
+3) 루트사가 만들기
+4) 사가 미들웨어 등록
+
 
 
 ```
